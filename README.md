@@ -4,4 +4,4 @@
 - Petean Marina Zoe - 110564
 - Romano Nicolas - 110830
 
-﻿TB025 Paradigmas de Programación
+## ﻿TB025 Paradigmas de Programación
