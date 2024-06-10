@@ -2,22 +2,22 @@
   (:require [clojure.string :as str])
   (:gen-class))
 
-(defrecord Turtle [x y angle pen-down? stack])
+(defrecord Turtle [x y angle pen-down? stack is-pop])
 
 (defn init-turtle []
-  (->Turtle 0.0 0.0 (* Math/PI 1.5) true []))
+  (->Turtle 0.0 0.0 (* Math/PI 1.5) true [] false))
 
 (defn move-forward [turtle distance]
   (let [angle (:angle turtle)
         new-x (+ (:x turtle) (* distance (Math/cos angle)))
         new-y (+ (:y turtle) (* distance (Math/sin angle)))]
-    (assoc turtle :x new-x :y new-y)))
+    (assoc turtle :x new-x :y new-y :is-pop false)))
 
 (defn turn-left [turtle angle]
-  (update turtle :angle #(+ % (* angle (/ Math/PI 180.0)))))
+  (update turtle :angle #(- % (* angle (/ Math/PI 180.0)))))
 
 (defn turn-right [turtle angle]
-  (update turtle :angle #(- % (* angle (/ Math/PI 180.0)))))
+  (update turtle :angle #(+ % (* angle (/ Math/PI 180.0)))))
 
 (defn invert-direction [turtle]
   (update turtle :angle #(+ % Math/PI)))
@@ -33,7 +33,7 @@
 (defn pop-state [turtle]
   (let [last-state (peek (:stack turtle))
         new-stack (pop (:stack turtle))]
-    (merge turtle last-state {:stack new-stack})))
+    (merge turtle last-state {:stack new-stack :is-pop true})))
 
 (defn parse-l-system-file [filename]
   (let [lines (str/split-lines (slurp filename))
@@ -55,14 +55,14 @@
     (if (zero? n)
       current
       (recur (apply str (map #(apply-rules rules %) current)) (dec n)))))
-
+      
 (defn l-system-to-commands [l-system angle]
   (map (fn [char]
          (case char
-           \F [:forward 1]
-           \G [:forward 1]
-           \f [:pen-up-forward 1]
-           \g [:pen-up-forward 1]
+           \F [:forward 100]
+           \G [:forward 100]
+           \f [:pen-up-forward 100]
+           \g [:pen-up-forward 100]
            \+ [:right angle]
            \- [:left angle]
            \| [:invert]
@@ -102,8 +102,8 @@
         width (- max-x min-x)
         height (- max-y min-y)
         lines (for [[t1 t2] (partition 2 1 turtle-positions)
-                    :when (:pen-down? t1)]
-                (str "<line x1=\"" (:x t1) "\" y1=\"" (:y t1) "\" x2=\"" (:x t2) "\" y2=\"" (:y t2) "\" stroke-width=\"0.1\" stroke=\"black\"/>"))]
+                    :when (and (:pen-down? t1) (not (:is-pop t2)))]
+                (str "<line x1=\"" (:x t1) "\" y1=\"" (:y t1) "\" x2=\"" (:x t2) "\" y2=\"" (:y t2) "\" stroke-width=\"5\" stroke=\"black\"/>"))]
     (str "<svg viewBox=\"" min-x " " min-y " " width " " height "\" xmlns=\"http://www.w3.org/2000/svg\">" (str/join "" lines) "</svg>")))
 
 (defn generate-fractal-svg [filename iterations output-filename]
