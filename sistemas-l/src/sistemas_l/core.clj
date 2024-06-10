@@ -2,10 +2,11 @@
   (:require [clojure.string :as str])
   (:gen-class))
 
-(defrecord Turtle [x y angle pen-down? stack is-pop])
+(defn create-turtle [x y angle pen-down? stack is-pop]
+  {:x x :y y :angle angle :pen-down? pen-down? :stack stack :is-pop is-pop})
 
 (defn init-turtle []
-  (->Turtle 0.0 0.0 (* Math/PI 1.5) true [] false))
+  (create-turtle 0.0 0.0 (* Math/PI 1.5) true [] false))
 
 (defn move-forward [turtle distance]
   (let [angle (:angle turtle)
